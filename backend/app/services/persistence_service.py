@@ -1,5 +1,6 @@
 """Persists simulation events without coupling routes to SQLAlchemy models."""
 
+from sqlalchemy import desc
 from sqlalchemy.orm import Session
 
 from ..models import (
@@ -8,10 +9,18 @@ from ..models import (
     UobPacketRecord,
     VehicleTelemetryRecord,
 )
-from ..schemas import InfrastructureState, UobPacket, VehicleSafetyAssessment, VehicleState
+from ..schemas import (
+    InfrastructureState,
+    UobPacket,
+    VehicleSafetyAssessment,
+    VehicleState,
+)
 
 
-def record_infrastructure_state(session: Session, state: InfrastructureState) -> None:
+def record_infrastructure_state(
+    session: Session,
+    state: InfrastructureState,
+) -> None:
     session.add(
         InfrastructureTelemetryRecord(
             node_id=state.node_id,
@@ -25,10 +34,32 @@ def record_infrastructure_state(session: Session, state: InfrastructureState) ->
             health_category=state.health.category.value,
         )
     )
+
     session.commit()
 
 
-def record_vehicle_state(session: Session, state: VehicleState) -> None:
+def get_latest_infrastructure_state(
+    session: Session,
+    node_id: str,
+) -> InfrastructureTelemetryRecord | None:
+    """Return the latest persisted infrastructure telemetry record."""
+
+    return (
+        session.query(InfrastructureTelemetryRecord)
+        .filter(
+            InfrastructureTelemetryRecord.node_id == node_id
+        )
+        .order_by(
+            desc(InfrastructureTelemetryRecord.recorded_at)
+        )
+        .first()
+    )
+
+
+def record_vehicle_state(
+    session: Session,
+    state: VehicleState,
+) -> None:
     session.add(
         VehicleTelemetryRecord(
             vehicle_id=state.vehicle_id,
@@ -39,6 +70,7 @@ def record_vehicle_state(session: Session, state: VehicleState) -> None:
             reaction_time_s=state.reaction_time_s,
         )
     )
+
     session.commit()
 
 
@@ -86,6 +118,7 @@ def record_safety_event(
             ),
         ]
     )
+
     if packet is not None:
         session.add(
             UobPacketRecord(
@@ -99,4 +132,5 @@ def record_safety_event(
                 message=packet.message,
             )
         )
+
     session.commit()

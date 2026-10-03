@@ -1,3 +1,4 @@
+
 from datetime import datetime, timezone
 
 from app.schemas import (
@@ -8,7 +9,10 @@ from app.schemas import (
     VehicleState,
     VehicleType,
 )
-from app.services.safety_service import assess_vehicle_safety, calculate_stopping_distance_m
+from app.services.safety_service import (
+    assess_vehicle_safety,
+    calculate_stopping_distance_m,
+)
 
 
 def make_vehicle(speed_kph: float) -> VehicleState:
@@ -17,6 +21,7 @@ def make_vehicle(speed_kph: float) -> VehicleState:
         vehicle_type=VehicleType.CAR,
         timestamp=datetime.now(timezone.utc),
         approaching_node_id="BR-001",
+        distance_to_bridge_m=100,
         speed_kph=speed_kph,
         mass_kg=1_400,
         road_friction=0.72,
@@ -24,7 +29,10 @@ def make_vehicle(speed_kph: float) -> VehicleState:
     )
 
 
-def make_infrastructure(category: StructuralHealthCategory, health: float) -> InfrastructureState:
+def make_infrastructure(
+    category: StructuralHealthCategory,
+    health: float,
+) -> InfrastructureState:
     return InfrastructureState(
         node_id="BR-001",
         name="Bagmati River Bridge",
@@ -44,9 +52,9 @@ def make_infrastructure(category: StructuralHealthCategory, health: float) -> In
 
 
 def test_stopping_distance_increases_with_speed() -> None:
-    assert calculate_stopping_distance_m(make_vehicle(80)) > calculate_stopping_distance_m(
-        make_vehicle(40)
-    )
+    assert calculate_stopping_distance_m(
+        make_vehicle(80)
+    ) > calculate_stopping_distance_m(make_vehicle(40))
 
 
 def test_high_risk_infrastructure_produces_red_decision() -> None:
@@ -56,4 +64,6 @@ def test_high_risk_infrastructure_produces_red_decision() -> None:
     )
 
     assert assessment.decision is SafetyDecision.RED
-    assert assessment.recommended_speed_kph == 25
+    assert assessment.recommended_speed_kph == 0
+    assert assessment.crossing_speed_limit_kph == 0
+    assert assessment.can_stop_before_bridge is True

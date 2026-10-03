@@ -1,22 +1,33 @@
-"""Database configuration for local SQLite and production PostgreSQL."""
 
-import os
+"""Database configuration for PostgreSQL."""
+
 from collections.abc import Generator
-from pathlib import Path
 
-from sqlalchemy import create_engine
+from sqlalchemy import URL, create_engine
 from sqlalchemy.orm import DeclarativeBase, Session, sessionmaker
 
-BACKEND_DIRECTORY = Path(__file__).resolve().parents[1]
-DEFAULT_DATABASE_URL = f"sqlite:///{BACKEND_DIRECTORY / 'project1.db'}"
-DATABASE_URL = os.getenv("DATABASE_URL", DEFAULT_DATABASE_URL)
+from app.config import settings
 
-engine_options: dict[str, object] = {"pool_pre_ping": True}
-if DATABASE_URL.startswith("sqlite"):
-    engine_options["connect_args"] = {"check_same_thread": False}
 
-engine = create_engine(DATABASE_URL, **engine_options)
-SessionLocal = sessionmaker(bind=engine, autocommit=False, autoflush=False)
+DATABASE_URL = URL.create(
+    drivername="postgresql+psycopg",
+    username=settings.database_username,
+    password=settings.database_password,
+    host=settings.database_hostname,
+    port=settings.database_port,
+    database=settings.database_name,
+)
+
+engine = create_engine(
+    DATABASE_URL,
+    pool_pre_ping=True,
+)
+
+SessionLocal = sessionmaker(
+    bind=engine,
+    autocommit=False,
+    autoflush=False,
+)
 
 
 class Base(DeclarativeBase):
@@ -24,14 +35,12 @@ class Base(DeclarativeBase):
 
 
 def initialise_database() -> None:
-    """Create the application's tables when they do not already exist."""
-
-    from . import models  # noqa: F401 - imports SQLAlchemy table metadata.
-
+    """Create missing tables when explicitly requested."""
     Base.metadata.create_all(bind=engine)
 
 
 def get_session() -> Generator[Session, None, None]:
+    """Provide a database session and close it after use."""
     session = SessionLocal()
     try:
         yield session

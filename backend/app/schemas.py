@@ -1,3 +1,4 @@
+
 from datetime import datetime
 from enum import StrEnum
 
@@ -50,7 +51,11 @@ class VehicleState(BaseModel):
     vehicle_id: str
     vehicle_type: VehicleType
     timestamp: datetime
+
     approaching_node_id: str
+    current_segment_id: str = "unknown"
+    distance_to_bridge_m: float = Field(default=0, ge=0)
+
     speed_kph: float = Field(ge=0)
     mass_kg: float = Field(gt=0)
     road_friction: float = Field(gt=0, le=1)
@@ -64,13 +69,29 @@ class SafetyDecision(StrEnum):
 
 
 class VehicleSafetyAssessment(BaseModel):
-    """A vehicle-specific safety recommendation for the current bridge state."""
+    """Vehicle-specific safety calculations and recommendation."""
 
     decision: SafetyDecision
+
+    # Speed recommendations.
     recommended_speed_kph: float = Field(ge=0)
+    approach_speed_limit_kph: float = Field(ge=0)
+    crossing_speed_limit_kph: float = Field(ge=0)
+
+    # Stopping-distance calculations.
+    reaction_distance_m: float = Field(ge=0)
+    braking_distance_m: float = Field(ge=0)
     stopping_distance_m: float = Field(ge=0)
+    safety_buffer_m: float = Field(ge=0)
     available_stopping_distance_m: float = Field(ge=0)
     safety_margin_m: float
+
+    # Vehicle physics.
+    kinetic_energy_j: float = Field(ge=0)
+
+    # Whether the vehicle can stop before the reserved boundary.
+    can_stop_before_bridge: bool
+
     message: str
 
 
@@ -81,7 +102,7 @@ class SafetyDecisionResponse(BaseModel):
 
 
 class UobPacket(BaseModel):
-    """A virtual Unified On-board Broadcast sent from a Smart Node to a vehicle."""
+    """A virtual Unified On-board Broadcast from a Smart Node to a vehicle."""
 
     packet_id: str
     format_version: str

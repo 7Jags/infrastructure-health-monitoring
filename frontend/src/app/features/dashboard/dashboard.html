@@ -1,0 +1,1501 @@
+<div class="dashboard" [class.dark-mode]="isDarkMode">
+
+  <!-- =========================================================
+       HEADER
+       ========================================================= -->
+
+  <header class="app-header">
+
+    <div class="brand">
+      <div class="brand-mark">
+        I2V
+      </div>
+
+      <div class="brand-copy">
+        <h1>Smart Infrastructure Intelligence</h1>
+        <p>Context-aware infrastructure monitoring and vehicle safety</p>
+      </div>
+    </div>
+
+    <div class="header-actions">
+
+      <div class="simulation-status">
+        <span class="status-dot"></span>
+        <span>SIMULATION ONLINE</span>
+      </div>
+
+      <button
+  type="button"
+  class="theme-toggle"
+  (click)="toggleTheme()"
+  [attr.aria-label]="isDarkMode ? 'Switch to light mode' : 'Switch to dark mode'"
+>
+  <span class="theme-icon" aria-hidden="true">
+    {{ isDarkMode ? '☾' : '☀' }}
+  </span>
+</button>
+
+    </div>
+
+  </header>
+
+
+  <!-- =========================================================
+       NAVIGATION
+       ========================================================= -->
+
+  <nav class="section-nav">
+
+    <div class="nav-items">
+
+      <button
+        class="nav-item"
+        [class.active]="activeSection === 'overview'"
+        (click)="setActiveSection('overview')"
+      >
+        Overview
+      </button>
+
+      <button
+        class="nav-item"
+        [class.active]="activeSection === 'infrastructure'"
+        (click)="setActiveSection('infrastructure')"
+      >
+        Infrastructure
+      </button>
+
+      <button
+        class="nav-item"
+        [class.active]="activeSection === 'vehicles'"
+        (click)="setActiveSection('vehicles')"
+      >
+        Vehicles
+      </button>
+
+      <button
+        class="nav-item"
+        [class.active]="activeSection === 'safety'"
+        (click)="setActiveSection('safety')"
+      >
+        Safety
+      </button>
+
+      <button
+        class="nav-item"
+        [class.active]="activeSection === 'uob'"
+        (click)="setActiveSection('uob')"
+      >
+        UOB
+      </button>
+
+      <button
+        class="nav-item"
+        [class.active]="activeSection === 'analytics'"
+        (click)="setActiveSection('analytics')"
+      >
+        Analytics
+      </button>
+
+    </div>
+
+    <div class="system-state">
+      <span class="system-state-label">NODE</span>
+      <strong>{{ infrastructure?.node_id || 'BR-001' }}</strong>
+      <span class="system-state-divider"></span>
+      <span class="system-state-label">MODE</span>
+      <strong>VIRTUAL</strong>
+    </div>
+
+  </nav>
+
+
+  <!-- =========================================================
+       MAIN
+       ========================================================= -->
+
+  <main class="workspace">
+
+
+    <!-- =======================================================
+         OVERVIEW
+         ======================================================= -->
+
+    @if (activeSection === 'overview') {
+
+      <section class="page-heading">
+
+        <div>
+          <span class="eyebrow">SYSTEM OVERVIEW</span>
+
+          <h2>
+            Infrastructure and vehicle safety
+          </h2>
+
+          <p>
+            Real-time virtual monitoring of structural condition,
+            vehicle context and I2V safety decisions.
+          </p>
+        </div>
+
+        <!-- <div class="page-heading-meta">
+          <span class="live-dot"></span>
+          Live simulation
+        </div> -->
+
+      </section>
+
+
+      <!-- SUMMARY -->
+
+      <section class="summary-grid">
+
+        <article class="summary-card health-card">
+
+          <div class="summary-label">
+            Structural health
+          </div>
+
+          <div class="summary-value">
+            {{ infrastructure?.health?.health_percentage ?? '--' }}
+            <span>%</span>
+          </div>
+
+          <div class="summary-foot">
+            {{ infrastructure?.health?.category || 'Waiting' }}
+          </div>
+
+        </article>
+
+
+        <article class="summary-card">
+
+          <div class="summary-label">
+            Current load
+          </div>
+
+          <div class="summary-value">
+            {{ infrastructure?.load_percent ?? '--' }}
+            <span>%</span>
+          </div>
+
+          <div class="summary-meter">
+            <div
+              [style.width.%]="infrastructure?.load_percent || 0"
+            ></div>
+          </div>
+
+        </article>
+
+
+        <article class="summary-card">
+
+          <div class="summary-label">
+            Vibration
+          </div>
+
+          <div class="summary-value">
+            {{ infrastructure?.vibration_hz ?? '--' }}
+            <span>Hz</span>
+          </div>
+
+          <div class="summary-foot">
+            Structural telemetry
+          </div>
+
+        </article>
+
+
+        <article class="summary-card">
+
+          <div class="summary-label">
+            Active vehicle
+          </div>
+
+          <div class="summary-value summary-id">
+            {{ vehicle?.vehicle_id || '--' }}
+          </div>
+
+          <div class="summary-foot">
+            {{ vehicle?.vehicle_type || 'No vehicle selected' }}
+          </div>
+
+        </article>
+
+
+        <article class="summary-card">
+
+          <div class="summary-label">
+            Safety decision
+          </div>
+
+          <div
+            class="summary-value decision-value"
+            [class.green-text]="safety?.decision === 'green'"
+            [class.amber-text]="safety?.decision === 'amber'"
+            [class.red-text]="safety?.decision === 'red'"
+          >
+            {{ safety?.decision?.toUpperCase() || '--' }}
+          </div>
+
+          <div class="summary-foot">
+            Vehicle-specific assessment
+          </div>
+
+        </article>
+
+
+        <article class="summary-card">
+
+          <div class="summary-label">
+            UOB hazard code
+          </div>
+
+          <div class="summary-value summary-id">
+            {{ uob?.hazard_code || '--' }}
+          </div>
+
+          <div class="summary-foot">
+            {{ uob?.target_vehicle_id || 'No packet' }}
+          </div>
+
+        </article>
+
+      </section>
+
+
+      <!-- INFRASTRUCTURE + HEALTH -->
+
+      <section class="content-grid content-grid-main">
+
+        <article class="panel infrastructure-panel">
+
+          <div class="panel-header">
+
+            <div>
+              <span class="eyebrow">INFRASTRUCTURE MONITORING</span>
+
+              <h3>
+                {{ infrastructure?.node_id || 'BR-001' }}
+                <span>—</span>
+                {{ infrastructure?.name || 'Bagmati River Bridge' }}
+              </h3>
+            </div>
+
+            <span class="live-badge">
+              <span class="status-dot"></span>
+              LIVE
+            </span>
+
+          </div>
+
+
+          <div class="infrastructure-schematic">
+
+            <div class="schematic-grid"></div>
+
+            <div class="schematic-label label-top-left">
+              STRUCTURAL NODE
+            </div>
+
+            <div class="schematic-label label-top-right">
+              IMS
+            </div>
+
+            <div class="bridge-structure">
+
+              <div class="bridge-tower tower-left">
+                <span></span>
+                <span></span>
+                <span></span>
+              </div>
+
+              <div class="bridge-tower tower-right">
+                <span></span>
+                <span></span>
+                <span></span>
+              </div>
+
+              <div class="bridge-deck"></div>
+
+              <div class="sensor sensor-one"></div>
+              <div class="sensor sensor-two"></div>
+              <div class="sensor sensor-three"></div>
+
+            </div>
+
+
+            <div class="schematic-footer">
+
+              <div>
+                <span>NODE</span>
+                <strong>{{ infrastructure?.node_id || '--' }}</strong>
+              </div>
+
+              <div>
+                <span>TYPE</span>
+                <strong>{{ infrastructure?.infrastructure_type || '--' }}</strong>
+              </div>
+
+              <div>
+                <span>TRAFFIC</span>
+                <strong>
+                  {{ infrastructure?.traffic_vehicles_per_hour || '--' }}/h
+                </strong>
+              </div>
+
+            </div>
+
+          </div>
+
+        </article>
+
+
+        <article class="panel health-panel">
+
+          <div class="panel-header">
+
+            <div>
+              <span class="eyebrow">STRUCTURAL CONDITION</span>
+              <h3>Health index</h3>
+            </div>
+
+            <span class="node-tag">
+              {{ infrastructure?.node_id || '--' }}
+            </span>
+
+          </div>
+
+
+          <div class="health-content">
+
+            <div
+              class="health-gauge"
+              [style.--health-angle]="healthGaugeAngle + 'deg'"
+            >
+
+              <div class="health-gauge-inner">
+
+                <strong>
+                  {{ infrastructure?.health?.health_percentage ?? '--' }}%
+                </strong>
+
+                <span>HEALTH</span>
+
+              </div>
+
+            </div>
+
+
+            <div class="health-state">
+
+              <div
+                class="state-indicator"
+                [class.state-normal]="infrastructure?.health?.category === 'normal'"
+                [class.state-caution]="infrastructure?.health?.category === 'caution'"
+                [class.state-risk]="infrastructure?.health?.category === 'high_risk'"
+              ></div>
+
+              <div>
+                <strong>
+                  {{ infrastructure?.health?.category || 'UNKNOWN' }}
+                </strong>
+
+                <span>Current structural state</span>
+              </div>
+
+            </div>
+
+
+            <div class="health-details">
+
+              <div>
+                <span>Risk score</span>
+                <strong>
+                  {{ infrastructure?.health?.risk_score ?? '--' }}
+                </strong>
+              </div>
+
+              <div>
+                <span>Load</span>
+                <strong>
+                  {{ infrastructure?.load_percent ?? '--' }}%
+                </strong>
+              </div>
+
+              <div>
+                <span>Vibration</span>
+                <strong>
+                  {{ infrastructure?.vibration_hz ?? '--' }} Hz
+                </strong>
+              </div>
+
+              <div>
+                <span>Strain</span>
+                <strong>
+                  {{ infrastructure?.strain ?? '--' }}
+                </strong>
+              </div>
+
+            </div>
+
+          </div>
+
+        </article>
+
+      </section>
+
+
+      <!-- TELEMETRY + VEHICLE -->
+
+      <section class="content-grid">
+
+        <article class="panel">
+
+          <div class="panel-header">
+
+            <div>
+              <span class="eyebrow">INFRASTRUCTURE DATA</span>
+              <h3>Live telemetry</h3>
+            </div>
+
+            <span class="panel-note">Updating</span>
+
+          </div>
+
+
+          <div class="telemetry-table">
+
+            <div class="telemetry-row">
+
+              <span>Load</span>
+
+              <strong>
+                {{ infrastructure?.load_percent ?? '--' }}%
+              </strong>
+
+              <div class="data-bar">
+                <div
+                  [style.width.%]="infrastructure?.load_percent || 0"
+                ></div>
+              </div>
+
+            </div>
+
+
+            <div class="telemetry-row">
+
+              <span>Vibration</span>
+
+              <strong>
+                {{ infrastructure?.vibration_hz ?? '--' }} Hz
+              </strong>
+
+              <div class="data-bar">
+                <div
+                  [style.width.%]="((infrastructure?.vibration_hz || 0) / 8) * 100"
+                ></div>
+              </div>
+
+            </div>
+
+
+            <div class="telemetry-row">
+
+              <span>Strain</span>
+
+              <strong>
+                {{ infrastructure?.strain ?? '--' }}
+              </strong>
+
+              <div class="data-bar">
+                <div
+                  [style.width.%]="((infrastructure?.strain || 0) / 0.0045) * 100"
+                ></div>
+              </div>
+
+            </div>
+
+
+            <div class="telemetry-row">
+
+              <span>Temperature</span>
+
+              <strong>
+                {{ infrastructure?.temperature_c ?? '--' }} °C
+              </strong>
+
+              <div class="data-bar">
+                <div
+                  [style.width.%]="((infrastructure?.temperature_c || 0) / 50) * 100"
+                ></div>
+              </div>
+
+            </div>
+
+
+            <div class="telemetry-row">
+
+              <span>Traffic volume</span>
+
+              <strong>
+                {{ infrastructure?.traffic_vehicles_per_hour ?? '--' }}/h
+              </strong>
+
+              <div class="data-bar">
+                <div
+                  [style.width.%]="((infrastructure?.traffic_vehicles_per_hour || 0) / 3000) * 100"
+                ></div>
+              </div>
+
+            </div>
+
+          </div>
+
+        </article>
+
+
+        <article class="panel">
+
+          <div class="panel-header">
+
+            <div>
+              <span class="eyebrow">VEHICLE CONTEXT</span>
+              <h3>Approaching vehicle</h3>
+            </div>
+
+            <select
+              class="vehicle-select"
+              [value]="selectedVehicleId"
+              (change)="onVehicleChange($event)"
+            >
+              <option value="V-001">V-001</option>
+              <option value="V-002">V-002</option>
+              <option value="V-003">V-003</option>
+            </select>
+
+          </div>
+
+
+          <div class="vehicle-profile">
+
+            <div class="vehicle-id-block">
+              <span>VEHICLE ID</span>
+              <strong>{{ vehicle?.vehicle_id || '--' }}</strong>
+            </div>
+
+            <div class="vehicle-type-block">
+              <span>TYPE</span>
+              <strong>{{ vehicle?.vehicle_type || '--' }}</strong>
+            </div>
+
+          </div>
+
+
+          <div class="vehicle-data">
+
+            <div>
+              <span>Speed</span>
+              <strong>
+                {{ vehicle?.speed_kph ?? '--' }} km/h
+              </strong>
+            </div>
+
+            <div>
+              <span>Mass</span>
+              <strong>
+                {{ vehicle?.mass_kg ?? '--' }} kg
+              </strong>
+            </div>
+
+            <div>
+              <span>Road friction</span>
+              <strong>
+                {{ vehicle?.road_friction ?? '--' }}
+              </strong>
+            </div>
+
+            <div>
+              <span>Reaction time</span>
+              <strong>
+                {{ vehicle?.reaction_time_s ?? '--' }} s
+              </strong>
+            </div>
+
+          </div>
+
+        </article>
+
+      </section>
+
+
+      <!-- SAFETY + UOB -->
+
+      <section class="content-grid">
+
+        <article class="panel">
+
+          <div class="panel-header">
+
+            <div>
+              <span class="eyebrow">SAFETY ENGINE</span>
+              <h3>Vehicle-specific decision</h3>
+            </div>
+
+            <span class="node-tag">
+              {{ vehicle?.vehicle_id || '--' }}
+            </span>
+
+          </div>
+
+
+          <div
+            class="decision-panel"
+            [class.decision-green]="safety?.decision === 'green'"
+            [class.decision-amber]="safety?.decision === 'amber'"
+            [class.decision-red]="safety?.decision === 'red'"
+          >
+
+            <div class="decision-status">
+
+              <div class="decision-symbol">
+                <span
+                  [class.green-text]="safety?.decision === 'green'"
+                  [class.amber-text]="safety?.decision === 'amber'"
+                  [class.red-text]="safety?.decision === 'red'"
+                >
+                  {{ safety?.decision?.toUpperCase() || '--' }}
+                </span>
+              </div>
+
+              <div>
+                <strong>
+                  {{ safety?.decision?.toUpperCase() || 'WAITING' }}
+                </strong>
+
+                <p>
+                  {{ safety?.message || 'Waiting for safety assessment.' }}
+                </p>
+              </div>
+
+            </div>
+
+
+            <div class="decision-metrics">
+
+              <div>
+                <span>Recommended speed</span>
+                <strong>
+                  {{ safety?.recommended_speed_kph ?? '--' }} km/h
+                </strong>
+              </div>
+
+              <div>
+                <span>Stopping distance</span>
+                <strong>
+                  {{ safety?.stopping_distance_m ?? '--' }} m
+                </strong>
+              </div>
+
+              <div>
+                <span>Available distance</span>
+                <strong>
+                  {{ safety?.available_stopping_distance_m ?? '--' }} m
+                </strong>
+              </div>
+
+              <div>
+                <span>Safety margin</span>
+                <strong>
+                  {{ safety?.safety_margin_m ?? '--' }} m
+                </strong>
+              </div>
+
+            </div>
+
+          </div>
+
+        </article>
+
+
+        <article class="panel">
+
+          <div class="panel-header">
+
+            <div>
+              <span class="eyebrow">COMMUNICATION LAYER</span>
+              <h3>Universal Optical Broadcast</h3>
+            </div>
+
+            <span class="live-badge">
+              <span class="status-dot"></span>
+              ACTIVE
+            </span>
+
+          </div>
+
+
+          <div class="uob-route">
+
+            <div class="uob-endpoint">
+              <span>RSU</span>
+              <strong>{{ uob?.source_node_id || '--' }}</strong>
+            </div>
+
+            <div class="uob-line">
+              <span></span>
+              <span></span>
+              <span></span>
+            </div>
+
+            <div class="uob-endpoint endpoint-right">
+              <span>VU</span>
+              <strong>{{ uob?.target_vehicle_id || '--' }}</strong>
+            </div>
+
+          </div>
+
+
+          <div class="uob-data">
+
+            <div>
+              <span>Packet ID</span>
+              <strong>{{ uob?.packet_id || '--' }}</strong>
+            </div>
+
+            <div>
+              <span>Hazard code</span>
+              <strong>{{ uob?.hazard_code || '--' }}</strong>
+            </div>
+
+            <div>
+              <span>Decision</span>
+              <strong>{{ uob?.decision?.toUpperCase() || '--' }}</strong>
+            </div>
+
+            <div>
+              <span>Recommended speed</span>
+              <strong>{{ uob?.recommended_speed_kph ?? '--' }} km/h</strong>
+            </div>
+
+          </div>
+
+
+          <div class="uob-message">
+            <span>MESSAGE</span>
+            <p>
+              {{ uob?.message || 'No UOB packet available.' }}
+            </p>
+          </div>
+
+        </article>
+
+      </section>
+
+    }
+
+
+    <!-- =======================================================
+         INFRASTRUCTURE VIEW
+         ======================================================= -->
+
+    @if (activeSection === 'infrastructure') {
+
+      <section class="page-heading">
+
+        <div>
+          <span class="eyebrow">INFRASTRUCTURE</span>
+          <h2>Structural monitoring</h2>
+          <p>
+            Current infrastructure state and live sensor-derived parameters.
+          </p>
+        </div>
+
+      </section>
+
+
+      <section class="content-grid content-grid-main">
+
+        <article class="panel">
+
+          <div class="panel-header">
+
+            <div>
+              <span class="eyebrow">CURRENT NODE</span>
+              <h3>{{ infrastructure?.node_id }}</h3>
+            </div>
+
+            <span class="node-tag">
+              BRIDGE
+            </span>
+
+          </div>
+
+
+          <div class="large-health-layout">
+
+            <div
+              class="health-gauge large-gauge"
+              [style.--health-angle]="healthGaugeAngle + 'deg'"
+            >
+              <div class="health-gauge-inner">
+                <strong>
+                  {{ infrastructure?.health?.health_percentage ?? '--' }}%
+                </strong>
+                <span>HEALTH</span>
+              </div>
+            </div>
+
+
+            <div class="infrastructure-details">
+
+              <div>
+                <span>Name</span>
+                <strong>{{ infrastructure?.name }}</strong>
+              </div>
+
+              <div>
+                <span>Infrastructure type</span>
+                <strong>{{ infrastructure?.infrastructure_type }}</strong>
+              </div>
+
+              <div>
+                <span>Health category</span>
+                <strong>{{ infrastructure?.health?.category }}</strong>
+              </div>
+
+              <div>
+                <span>Risk score</span>
+                <strong>{{ infrastructure?.health?.risk_score }}</strong>
+              </div>
+
+            </div>
+
+          </div>
+
+        </article>
+
+
+        <article class="panel">
+
+          <div class="panel-header">
+            <div>
+              <span class="eyebrow">TELEMETRY</span>
+              <h3>Current measurements</h3>
+            </div>
+          </div>
+
+
+          <div class="measurement-list">
+
+            <div>
+              <span>Load percentage</span>
+              <strong>{{ infrastructure?.load_percent }}%</strong>
+            </div>
+
+            <div>
+              <span>Vibration frequency</span>
+              <strong>{{ infrastructure?.vibration_hz }} Hz</strong>
+            </div>
+
+            <div>
+              <span>Strain</span>
+              <strong>{{ infrastructure?.strain }}</strong>
+            </div>
+
+            <div>
+              <span>Temperature</span>
+              <strong>{{ infrastructure?.temperature_c }} °C</strong>
+            </div>
+
+            <div>
+              <span>Traffic</span>
+              <strong>{{ infrastructure?.traffic_vehicles_per_hour }}/h</strong>
+            </div>
+
+          </div>
+
+        </article>
+
+      </section>
+
+    }
+
+
+    <!-- =======================================================
+         VEHICLES VIEW
+         ======================================================= -->
+
+    @if (activeSection === 'vehicles') {
+
+      <section class="page-heading">
+
+        <div>
+          <span class="eyebrow">VEHICLE UNIT</span>
+          <h2>Vehicle context</h2>
+          <p>
+            Vehicle telemetry used by the contextual safety engine.
+          </p>
+        </div>
+
+      </section>
+
+
+      <section class="vehicle-dashboard">
+
+        <article class="panel vehicle-main-panel">
+
+          <div class="panel-header">
+
+            <div>
+              <span class="eyebrow">SELECTED VEHICLE</span>
+              <h3>{{ vehicle?.vehicle_id || '--' }}</h3>
+            </div>
+
+            <select
+              class="vehicle-select"
+              [value]="selectedVehicleId"
+              (change)="onVehicleChange($event)"
+            >
+              <option value="V-001">V-001</option>
+              <option value="V-002">V-002</option>
+              <option value="V-003">V-003</option>
+            </select>
+
+          </div>
+
+
+          <div class="vehicle-large-id">
+            <span>VEHICLE</span>
+            <strong>{{ vehicle?.vehicle_id || '--' }}</strong>
+            <small>{{ vehicle?.vehicle_type || '--' }}</small>
+          </div>
+
+
+          <div class="vehicle-large-grid">
+
+            <div>
+              <span>Speed</span>
+              <strong>{{ vehicle?.speed_kph ?? '--' }} km/h</strong>
+            </div>
+
+            <div>
+              <span>Mass</span>
+              <strong>{{ vehicle?.mass_kg ?? '--' }} kg</strong>
+            </div>
+
+            <div>
+              <span>Road friction</span>
+              <strong>{{ vehicle?.road_friction ?? '--' }}</strong>
+            </div>
+
+            <div>
+              <span>Reaction time</span>
+              <strong>{{ vehicle?.reaction_time_s ?? '--' }} s</strong>
+            </div>
+
+            <div>
+              <span>Approaching node</span>
+              <strong>{{ vehicle?.approaching_node_id || '--' }}</strong>
+            </div>
+
+          </div>
+
+        </article>
+
+
+        <article class="panel">
+
+          <div class="panel-header">
+
+            <div>
+              <span class="eyebrow">VEHICLE FLEET</span>
+              <h3>Simulation nodes</h3>
+            </div>
+
+          </div>
+
+
+          <div class="fleet-list">
+
+            <button
+              type="button"
+              class="fleet-row"
+              [class.selected]="selectedVehicleId === 'V-001'"
+              (click)="onVehicleChange($event)"
+            >
+              <span>V-001</span>
+              <small>CAR</small>
+            </button>
+
+            <button
+              type="button"
+              class="fleet-row"
+              [class.selected]="selectedVehicleId === 'V-002'"
+              (click)="onVehicleChange($event)"
+            >
+              <span>V-002</span>
+              <small>BUS</small>
+            </button>
+
+            <button
+              type="button"
+              class="fleet-row"
+              [class.selected]="selectedVehicleId === 'V-003'"
+              (click)="onVehicleChange($event)"
+            >
+              <span>V-003</span>
+              <small>TRUCK</small>
+            </button>
+
+          </div>
+
+          <p class="fleet-note">
+            Select a vehicle to refresh its simulated telemetry and
+            vehicle-specific safety calculation.
+          </p>
+
+        </article>
+
+      </section>
+
+    }
+
+
+    <!-- =======================================================
+         SAFETY VIEW
+         ======================================================= -->
+
+    @if (activeSection === 'safety') {
+
+      <section class="page-heading">
+
+        <div>
+          <span class="eyebrow">SAFETY ENGINE</span>
+          <h2>Context-aware safety decision</h2>
+          <p>
+            Infrastructure health is evaluated together with the selected
+            vehicle's current operating state.
+          </p>
+        </div>
+
+      </section>
+
+
+      <section class="safety-dashboard">
+
+        <article
+          class="panel safety-decision-large"
+          [class.decision-green]="safety?.decision === 'green'"
+          [class.decision-amber]="safety?.decision === 'amber'"
+          [class.decision-red]="safety?.decision === 'red'"
+        >
+
+          <div class="decision-large-header">
+
+            <span>DECISION</span>
+
+            <strong>
+              {{ safety?.decision?.toUpperCase() || 'WAITING' }}
+            </strong>
+
+          </div>
+
+
+          <div class="decision-large-message">
+            {{ safety?.message || 'Waiting for a safety assessment.' }}
+          </div>
+
+
+          <div class="decision-large-grid">
+
+            <div>
+              <span>Vehicle</span>
+              <strong>{{ vehicle?.vehicle_id || '--' }}</strong>
+            </div>
+
+            <div>
+              <span>Vehicle speed</span>
+              <strong>{{ vehicle?.speed_kph ?? '--' }} km/h</strong>
+            </div>
+
+            <div>
+              <span>Bridge health</span>
+              <strong>
+                {{ infrastructure?.health?.health_percentage ?? '--' }}%
+              </strong>
+            </div>
+
+            <div>
+              <span>Recommended speed</span>
+              <strong>{{ safety?.recommended_speed_kph ?? '--' }} km/h</strong>
+            </div>
+
+          </div>
+
+        </article>
+
+
+        <article class="panel">
+
+          <div class="panel-header">
+
+            <div>
+              <span class="eyebrow">STOPPING MODEL</span>
+              <h3>Safety margins</h3>
+            </div>
+
+          </div>
+
+
+          <div class="safety-list">
+
+            <div>
+              <span>Stopping distance</span>
+              <strong>{{ safety?.stopping_distance_m ?? '--' }} m</strong>
+            </div>
+
+            <div>
+              <span>Available distance</span>
+              <strong>{{ safety?.available_stopping_distance_m ?? '--' }} m</strong>
+            </div>
+
+            <div>
+              <span>Safety margin</span>
+              <strong>{{ safety?.safety_margin_m ?? '--' }} m</strong>
+            </div>
+
+            <div>
+              <span>Road friction</span>
+              <strong>{{ vehicle?.road_friction ?? '--' }}</strong>
+            </div>
+
+            <div>
+              <span>Reaction time</span>
+              <strong>{{ vehicle?.reaction_time_s ?? '--' }} s</strong>
+            </div>
+
+          </div>
+
+        </article>
+
+      </section>
+
+    }
+
+
+    <!-- =======================================================
+         UOB VIEW
+         ======================================================= -->
+
+    @if (activeSection === 'uob') {
+
+      <section class="page-heading">
+
+        <div>
+          <span class="eyebrow">COMMUNICATION</span>
+          <h2>Universal Optical Broadcast</h2>
+          <p>
+            Virtual representation of the infrastructure-to-vehicle
+            broadcast path.
+          </p>
+        </div>
+
+      </section>
+
+
+      <section class="uob-dashboard">
+
+        <article class="panel">
+
+          <div class="panel-header">
+
+            <div>
+              <span class="eyebrow">LATEST PACKET</span>
+              <h3>{{ uob?.packet_id || 'No packet' }}</h3>
+            </div>
+
+            <span class="live-badge">
+              <span class="status-dot"></span>
+              LIVE
+            </span>
+
+          </div>
+
+
+          <div class="uob-large-route">
+
+            <div class="route-node">
+              <span>ROAD SIDE UNIT</span>
+              <strong>{{ uob?.source_node_id || '--' }}</strong>
+            </div>
+
+            <div class="route-connection">
+              <span></span>
+              <span></span>
+              <span></span>
+            </div>
+
+            <div class="route-node">
+              <span>VEHICLE UNIT</span>
+              <strong>{{ uob?.target_vehicle_id || '--' }}</strong>
+            </div>
+
+          </div>
+
+
+          <div class="packet-grid">
+
+            <div>
+              <span>Format version</span>
+              <strong>{{ uob?.format_version || '--' }}</strong>
+            </div>
+
+            <div>
+              <span>Hazard code</span>
+              <strong>{{ uob?.hazard_code || '--' }}</strong>
+            </div>
+
+            <div>
+              <span>Decision</span>
+              <strong>{{ uob?.decision?.toUpperCase() || '--' }}</strong>
+            </div>
+
+            <div>
+              <span>Bridge health</span>
+              <strong>{{ uob?.bridge_health_percentage ?? '--' }}%</strong>
+            </div>
+
+            <div>
+              <span>Recommended speed</span>
+              <strong>{{ uob?.recommended_speed_kph ?? '--' }} km/h</strong>
+            </div>
+
+          </div>
+
+
+          <div class="packet-message">
+
+            <span>TRANSMISSION MESSAGE</span>
+
+            <p>
+              {{ uob?.message || 'No UOB transmission available.' }}
+            </p>
+
+          </div>
+
+        </article>
+
+      </section>
+
+    }
+
+
+    <!-- =======================================================
+         ANALYTICS
+         ======================================================= -->
+
+    @if (activeSection === 'analytics') {
+
+      <section class="page-heading">
+
+        <div>
+          <span class="eyebrow">HISTORICAL DATA</span>
+          <h2>Infrastructure analytics</h2>
+          <p>
+            Recent structural telemetry persisted by the backend simulation.
+          </p>
+        </div>
+
+      </section>
+
+
+      <section class="analytics-summary">
+
+        <div class="analytics-stat">
+          <span>Records</span>
+          <strong>{{ infrastructureHistory.length }}</strong>
+        </div>
+
+        <div class="analytics-stat">
+          <span>Current health</span>
+          <strong>
+            {{ infrastructure?.health?.health_percentage ?? '--' }}%
+          </strong>
+        </div>
+
+        <div class="analytics-stat">
+          <span>Current load</span>
+          <strong>
+            {{ infrastructure?.load_percent ?? '--' }}%
+          </strong>
+        </div>
+
+        <div class="analytics-stat">
+          <span>Node</span>
+          <strong>{{ infrastructure?.node_id || '--' }}</strong>
+        </div>
+
+      </section>
+
+
+      <article class="panel analytics-chart-panel">
+
+        <div class="panel-header">
+
+          <div>
+            <span class="eyebrow">HEALTH TREND</span>
+            <h3>Recent structural health</h3>
+          </div>
+
+          <span class="panel-note">
+            Last {{ infrastructureHistory.length }} records
+          </span>
+
+        </div>
+
+
+        @if (analyticsHistory.length > 0) {
+
+          <div class="health-chart">
+
+            <div class="chart-scale">
+              <span>100%</span>
+              <span>95%</span>
+              <span>90%</span>
+            </div>
+
+            <div class="chart-body">
+
+              <div class="chart-grid-line line-100"></div>
+              <div class="chart-grid-line line-95"></div>
+              <div class="chart-grid-line line-90"></div>
+
+              <div class="chart-bars">
+
+                @for (
+                  point of analyticsHistory.slice(-30);
+                  track point.id
+                ) {
+
+                  <div class="chart-column">
+
+                    <div class="chart-value">
+                      {{ point.health_percentage }}
+                    </div>
+
+                    <div
+                      class="chart-bar"
+                      [style.height.%]="((point.health_percentage - 90) / 10) * 100"
+                    ></div>
+
+                  </div>
+
+                }
+
+              </div>
+
+            </div>
+
+          </div>
+
+        } @else {
+
+          <div class="empty-state">
+            <strong>No historical telemetry</strong>
+            <span>
+              Historical infrastructure records will appear here once
+              the simulator has generated data.
+            </span>
+          </div>
+
+        }
+
+      </article>
+
+
+      <article class="panel history-panel">
+
+        <div class="panel-header">
+
+          <div>
+            <span class="eyebrow">TELEMETRY HISTORY</span>
+            <h3>Recent records</h3>
+          </div>
+
+        </div>
+
+
+        <div class="history-table">
+
+          <div class="history-header">
+            <span>TIME</span>
+            <span>LOAD</span>
+            <span>VIBRATION</span>
+            <span>STRAIN</span>
+            <span>TEMP</span>
+            <span>HEALTH</span>
+            <span>STATE</span>
+          </div>
+
+
+          @for (
+            point of infrastructureHistory.slice(0, 12);
+            track point.id
+          ) {
+
+            <div class="history-row">
+
+              <span>
+                {{ point.recorded_at }}
+              </span>
+
+              <span>
+                {{ point.load_percent }}%
+              </span>
+
+              <span>
+                {{ point.vibration_hz }} Hz
+              </span>
+
+              <span>
+                {{ point.strain }}
+              </span>
+
+              <span>
+                {{ point.temperature_c }} °C
+              </span>
+
+              <strong>
+                {{ point.health_percentage }}%
+              </strong>
+
+              <span class="history-state">
+                {{ point.health_category }}
+              </span>
+
+            </div>
+
+          }
+
+        </div>
+
+      </article>
+
+    }
+
+  </main>
+
+
+  <!-- =========================================================
+       FOOTER
+       ========================================================= -->
+
+  <footer class="app-footer">
+
+    <div>
+      Smart Infrastructure Intelligence
+    </div>
+
+  </footer>
+
+</div>
