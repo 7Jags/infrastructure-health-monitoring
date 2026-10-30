@@ -6,17 +6,17 @@ from threading import Lock
 from sqlalchemy.orm import Session
 
 from ..database import SessionLocal
-from .infrastructure_simulator import bridge_simulator
+from .infrastructure_simulator import bridge_simulators
 from .persistence_service import record_infrastructure_state
 
 
 class SimulationService:
-    """Run the virtual infrastructure simulation continuously."""
+    """Run all virtual bridge simulations continuously."""
 
     def __init__(self, interval_seconds: float = 1.0):
         self.interval_seconds = interval_seconds
         self._running = False
-        self._task: asyncio.Task | None = None # type: ignore
+        self._task: asyncio.Task | None = None
         self._lock = Lock()
 
     async def start(self) -> None:
@@ -28,19 +28,20 @@ class SimulationService:
 
             self._running = True
 
-        print("Infrastructure simulation started.")
+        print("Infrastructure network simulation started.")
 
         try:
             while self._running:
-                self._generate_and_store_state()
-
-                await asyncio.sleep(
-                    self.interval_seconds
-                )
+                self._generate_and_store_states()
+                await asyncio.sleep(self.interval_seconds)
 
         except asyncio.CancelledError:
-            print("Infrastructure simulation stopped.")
+            print("Infrastructure network simulation stopped.")
             raise
+
+        finally:
+            with self._lock:
+                self._running = False
 
     def stop(self) -> None:
         """Stop the simulation loop."""
@@ -48,18 +49,19 @@ class SimulationService:
         with self._lock:
             self._running = False
 
-    def _generate_and_store_state(self) -> None:
-        """Generate one bridge state and save it."""
-
-        state = bridge_simulator.next_state()
+    def _generate_and_store_states(self) -> None:
+        """Generate and persist telemetry for every bridge."""
 
         session: Session = SessionLocal()
 
         try:
-            record_infrastructure_state(
-                session,
-                state,
-            )
+            for simulator in bridge_simulators.values():
+                state = simulator.next_state()
+
+                record_infrastructure_state(
+                    session,
+                    state,
+                )
 
         finally:
             session.close()

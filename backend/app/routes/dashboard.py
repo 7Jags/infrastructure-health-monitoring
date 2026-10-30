@@ -1,8 +1,12 @@
 """Unified dashboard snapshot endpoint."""
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, status
+from sqlalchemy.orm import Session
 
-from ..services.infrastructure_simulator import bridge_simulator
+from ..database import get_session
+from ..services.infrastructure_state_service import (
+    get_current_infrastructure_state,
+)
 from ..services.safety_service import assess_vehicle_safety
 from ..services.uob_service import create_uob_packet
 from ..services.vehicle_simulator import vehicle_simulator
@@ -15,18 +19,33 @@ router = APIRouter(
 
 
 @router.get("/current/{vehicle_id}")
-def get_current_dashboard_snapshot(vehicle_id: str) -> dict:
-    """Return one consistent infrastructure-to-vehicle snapshot."""
+def get_current_dashboard_snapshot(
+    vehicle_id: str,
+    session: Session = Depends(get_session),
+) -> dict:
+    """Return one snapshot using the vehicle's approaching bridge."""
 
-    try:
-        vehicle = vehicle_simulator.next_state(vehicle_id)
-    except KeyError:
+    if vehicle_id not in vehicle_simulator.vehicle_ids:
         raise HTTPException(
-            status_code=404,
+            status_code=status.HTTP_404_NOT_FOUND,
             detail=f"Vehicle {vehicle_id} not found.",
         )
 
-    infrastructure = bridge_simulator.next_state()
+    vehicle = vehicle_simulator.next_state(vehicle_id)
+
+    try:
+        infrastructure = get_current_infrastructure_state(
+            session,
+            vehicle.approaching_node_id,
+        )
+    except KeyError:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=(
+                "Unknown approaching infrastructure node: "
+                f"{vehicle.approaching_node_id}"
+            ),
+        )
 
     assessment = assess_vehicle_safety(
         vehicle=vehicle,
