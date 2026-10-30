@@ -15,6 +15,7 @@ class Settings(BaseSettings):
     database_username: str = ""
     database_password: str = ""
     database_name: str = ""
+    database_sslmode: str = "prefer"
 
     model_config = SettingsConfigDict(
         env_file=BACKEND_DIRECTORY / ".env",
