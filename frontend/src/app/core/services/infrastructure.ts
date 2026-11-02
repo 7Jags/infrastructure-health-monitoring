@@ -1,6 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { environment } from '../../../environments/environment';
 
 export interface InfrastructureState {
   node_id: string;
@@ -28,7 +29,7 @@ export class Infrastructure {
 
   private http = inject(HttpClient);
 
-  private apiUrl = 'http://127.0.0.1:8000/api/infrastructure';
+  private apiUrl = `${environment.apiUrl}/api/infrastructure`;
 
   // Generate a NEW simulated infrastructure reading
   getBridgeState(bridgeId: string): Observable<InfrastructureState> {
