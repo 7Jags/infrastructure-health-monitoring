@@ -16,7 +16,7 @@ The platform simulates infrastructure and vehicle telemetry, evaluates structura
 |---|---|
 | Live Frontend | [Open Application](https://infrastructure-health-monitoring-frontend.onrender.com/) |
 | Backend API | [FastAPI Backend](https://infrastructure-health-monitoring-api.onrender.com) |
-| API Documentation | [Swagger UI](https://infrastructure-health-monitoring-api.onrender.com/docs) |
+| API Documentation | [Swagger UI](https://infrastructure-health-monitoring-api.onrender.com/docs#/) |
 | GitHub Repository | [Source Code](https://github.com/7Jags/infrastructure-health-monitoring) |
 
 *Note: The application is hosted on Render's free tier. Services may take some time to respond after periods of inactivity.*
